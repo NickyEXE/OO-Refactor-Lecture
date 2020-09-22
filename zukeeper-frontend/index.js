@@ -1,3 +1,5 @@
+const api = new ApiService
+
 /****************  DOM Elements ****************/
 const lightSwitch = document.querySelector("#toggle-dark-mode")
 const animalForm = document.querySelector("#animal-form")
@@ -10,22 +12,8 @@ animalList.addEventListener("click", e => {
   if (e.target.dataset.action === "freeToTheWild") {
     const cardLi = e.target.closest(".card")
     const animalId = cardLi.dataset.id
-
-    // optimistic rendering => before the response comes back, we showing the user the effect of removing
-    // cardLi.remove()
-
-    // DELETE /animals/:id
-    fetch(`http://localhost:3000/animals/${animalId}`, {
-      method: "DELETE"
-    })
-      .then(r => {
-        console.log(r)
-        return r.json()
-      })
-      .then(() => {
-        // pessimistic rendering => wait for the response before updating the DOM
-        cardLi.remove()
-      })
+    api.releaseAnimal(animalId)
+      .then(() => cardLi.remove())
   }
 
   if (e.target.dataset.action === "donate") {
@@ -33,19 +21,7 @@ animalList.addEventListener("click", e => {
     const donationCount = cardLi.querySelector(".donation-count")
     const newDonations = parseInt(donationCount.textContent) + 10
     const animalId = cardLi.dataset.id
-
-    // PATCH /animals/:id
-    // body: { donations: newDonations }
-    fetch(`http://localhost:3000/animals/${animalId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json", // how we are sending the data in the body
-        "Accept": "application/json" // how we want the response formatted
-      },
-      body: JSON.stringify({ donations: newDonations })
-    })
-
-    // optimistic rendering
+    api.donate(animalId, newDonations)
     donationCount.textContent = newDonations
   }
 })
@@ -71,23 +47,9 @@ function handleFormSubmit(event) {
 
   // make a fetch request to save the animal on the sever
   // POST /animals
-  fetch("http://localhost:3000/animals", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json", // how we are sending the data in the body
-      "Accept": "application/json" // how we want the response formatted
-    },
-    body: JSON.stringify(newAnimal)
-  })
-    .then(response => {
-      if (response.ok) {
-        return response.json()
-      } else {
-        throw Error("Bad request")
-      }
-    })
+    api.addAnimal(newAnimal)
     .then(actualNewAnimal => {
-      // pessimistic rendering => 
+      // pessimistic rendering =>
       // we are waiting for the response
       // before the user sees the new information
       console.log(actualNewAnimal)
@@ -133,12 +95,11 @@ function renderAllAnimals(animals) {
 }
 
 /**************** Initial Render ****************/
-fetch("http://localhost:3000/animals")
-  .then(response => response.json())
-  .then(actualAnimalData => {
+
+  api.getAllAnimals().then(actualAnimalData => {
     renderAllAnimals(actualAnimalData)
   })
 
-// When X event happens 
-// Do Y fetch request 
-// And slap Z on/off the DOM 
+// When X event happens
+// Do Y fetch request
+// And slap Z on/off the DOM
