@@ -1,4 +1,4 @@
-const api = new ApiService
+// const ApiService = new ApiService
 
 /****************  DOM Elements ****************/
 const lightSwitch = document.querySelector("#toggle-dark-mode")
@@ -8,23 +8,7 @@ const animalList = document.querySelector("#animal-list")
 /**************** Event Listeners ****************/
 lightSwitch.addEventListener("click", handleLightSwitchClick)
 animalForm.addEventListener("submit", handleFormSubmit)
-animalList.addEventListener("click", e => {
-  if (e.target.dataset.action === "freeToTheWild") {
-    const cardLi = e.target.closest(".card")
-    const animalId = cardLi.dataset.id
-    api.releaseAnimal(animalId)
-      .then(() => cardLi.remove())
-  }
 
-  if (e.target.dataset.action === "donate") {
-    const cardLi = e.target.closest(".card")
-    const donationCount = cardLi.querySelector(".donation-count")
-    const newDonations = parseInt(donationCount.textContent) + 10
-    const animalId = cardLi.dataset.id
-    api.donate(animalId, newDonations)
-    donationCount.textContent = newDonations
-  }
-})
 
 /**************** Event Handlers ****************/
 function handleLightSwitchClick() {
@@ -47,14 +31,9 @@ function handleFormSubmit(event) {
 
   // make a fetch request to save the animal on the sever
   // POST /animals
-    api.addAnimal(newAnimal)
+    ApiService.addAnimal(newAnimal)
     .then(actualNewAnimal => {
-      // pessimistic rendering =>
-      // we are waiting for the response
-      // before the user sees the new information
-      console.log(actualNewAnimal)
-      // and then => slap on the DOM
-      renderOneAnimal(actualNewAnimal)
+      new Animal(actualNewAnimal)
     })
     .catch(error => alert(error))
 
@@ -62,32 +41,7 @@ function handleFormSubmit(event) {
 
 /**************** Render Helpers ****************/
 function renderOneAnimal(animalObj) {
-  const cardLi = document.createElement('li')
-  cardLi.className = "card"
-  cardLi.dataset.id = animalObj.id
-
-  cardLi.innerHTML = `
-    <div class="image">
-      <img src="${animalObj.image_url}" alt="${animalObj.name}">
-      <button data-action="freeToTheWild" class="delete button">X</button>
-    </div>
-    <div class="content">
-      <div class="name">${animalObj.name}</div>
-      <div class="donations">
-        $<span class="donation-count">${animalObj.donations}</span> Donated
-      </div>
-      <div class="description">${animalObj.description}</div>
-      <div class="tags">
-        <span>${animalObj.species_name}</span>
-        <span class="${animalObj.diet}">${animalObj.diet}</span>
-      </div>
-    </div>
-    <button data-action="donate" class="donate button">
-      Donate $10
-    </button>
-  `
-
-  animalList.append(cardLi)
+  const animal = new Animal(animalObj)
 }
 
 function renderAllAnimals(animals) {
@@ -96,7 +50,7 @@ function renderAllAnimals(animals) {
 
 /**************** Initial Render ****************/
 
-  api.getAllAnimals().then(actualAnimalData => {
+  ApiService.getAllAnimals().then(actualAnimalData => {
     renderAllAnimals(actualAnimalData)
   })
 

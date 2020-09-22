@@ -1,11 +1,11 @@
 class ApiService {
 
-  getAllAnimals(){
+  static getAllAnimals(){
     return fetch("http://localhost:3000/animals")
     .then(response => response.json())
   }
 
-  releaseAnimal(id){
+  static releaseAnimal(id){
     return fetch(`http://localhost:3000/animals/${id}`, {
       method: "DELETE"
     })
@@ -15,7 +15,7 @@ class ApiService {
       })
   }
 
-  donate(animalId, newDonations){
+  static donate(animalId, newDonations){
     return fetch(`http://localhost:3000/animals/${animalId}`, {
       method: "PATCH",
       headers: {
@@ -24,9 +24,10 @@ class ApiService {
       },
       body: JSON.stringify({ donations: newDonations })
     })
+    .then(res => res.json())
   }
 
-  addAnimal(newAnimal){
+  static addAnimal(newAnimal){
     return fetch("http://localhost:3000/animals", {
       method: "POST",
       headers: {
